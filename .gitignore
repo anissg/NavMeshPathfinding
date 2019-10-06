@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+/.vs
+/NavMeshPathfinding/.vs/NavMeshPathfinding/v16
+/Debug
+/x64/Debug
