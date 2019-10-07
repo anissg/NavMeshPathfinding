@@ -12,27 +12,30 @@
 #include "imgui\imgui_impl_win32.h"
 
 #include "NavMesh.h"
-
-#define MAX_LOADSTRING 100
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 768
+#include "MapBuilder.h"
+#include "Map.h"
+#include "DxStructs.h"
 
 int game_state = 0;
 int app_running = 1;
+int selected_map = -1;
 int selected_algo = 0;
 bool draw_navmesh = true;
 bool draw_visited_nodes = false;
 NavMesh* nav_mesh;
+MapBuilder* map_builder;
+Map* map;
 
 HINSTANCE hInst;
 LPDIRECT3DDEVICE9 dx_device;
 ImGuiWindowFlags window_flags;
 
 HWND Window(LPCTSTR title, int x_pos, int y_pos, int width, int height);
-LPDIRECT3DDEVICE9 InitializeDevice(HWND hwnd);
-void SetUpCamera(LPDIRECT3DDEVICE9 p_dx_Device);
-void DrawScene(LPDIRECT3DDEVICE9 dx_device);
-void Update(LPDIRECT3DDEVICE9 dx_device);
+LPDIRECT3DDEVICE9 initialize_device(HWND hwnd);
+void setup_camera(LPDIRECT3DDEVICE9 p_dx_Device);
+void initialize();
+void update(LPDIRECT3DDEVICE9 dx_device);
+void draw_scene(LPDIRECT3DDEVICE9 dx_device);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
@@ -42,8 +45,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     MSG msg_Message;
     HWND hwnd = Window(L"NavMeshPathfinding", 0, 0, SCREEN_WIDTH + 7, SCREEN_HEIGHT + 29); // the window offsets
     
-    dx_device = InitializeDevice(hwnd);
-    SetUpCamera(dx_device);
+    dx_device = initialize_device(hwnd);
+    setup_camera(dx_device);
+    initialize();
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -72,8 +76,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
             DispatchMessage(&msg_Message);
         }
 
-        Update(dx_device);
-        DrawScene(dx_device);
+        update(dx_device);
+        draw_scene(dx_device);
     }
 
     ImGui_ImplDX9_Shutdown();
@@ -109,23 +113,22 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             break;
         }
     }
-    /*switch (game_state)
+
+    switch (game_state)
     {
         case 1:
         {
-            _floor->OurWindowProcedure(uint_Message, parameter1, parameter2);
-            _selectItem->OurWindowProcedure(uint_Message, parameter1, parameter2);
+            map->WindowProcedure(msg, wParam, lParam);
+            map_builder->WindowProcedure(msg, wParam, lParam);
             break;
         }
         case 2:
-        {
-            _selectItem->OurWindowProcedure(uint_Message, parameter1, parameter2);
-        }
         case 3:
         {
-            _selectItem->OurWindowProcedure(uint_Message, parameter1, parameter2);
+            map_builder->WindowProcedure(msg, wParam, lParam);
         }
-    }*/
+    }
+
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
@@ -163,7 +166,7 @@ HWND Window(LPCTSTR title, int x_pos, int y_pos, int width, int height)
         NULL);
 }
 
-LPDIRECT3DDEVICE9 InitializeDevice(HWND hwnd)
+LPDIRECT3DDEVICE9 initialize_device(HWND hwnd)
 {
     LPDIRECT3D9 dx_object;
     LPDIRECT3DDEVICE9 dx_device;
@@ -196,7 +199,7 @@ LPDIRECT3DDEVICE9 InitializeDevice(HWND hwnd)
     return dx_device;
 }
 
-void SetUpCamera(LPDIRECT3DDEVICE9 dx_device)
+void setup_camera(LPDIRECT3DDEVICE9 dx_device)
 {
     D3DXMATRIX ortho2d;
     D3DXMATRIX id;
@@ -213,63 +216,31 @@ void SetUpCamera(LPDIRECT3DDEVICE9 dx_device)
     dx_device->SetTransform(D3DTS_WORLD, &pos);
 }
 
-void DrawScene(LPDIRECT3DDEVICE9 dx_device)
-{
-    dx_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-    dx_device->BeginScene();
-
-    switch (game_state)
-    {
-    case 0:
-        break;
-    case 1:
-        //_selectItem->Draw(p_dx_Device);
-        //_navMesh->Draw(p_dx_Device);
-        break;
-    case 2:
-        //_selectItem->Draw(p_dx_Device);
-        //_navMesh->Draw(p_dx_Device);
-        //_pSearchAlgorithm->Draw(p_dx_Device);
-        break;
-    case 3:
-        //_selectItem->Draw(p_dx_Device);
-        //_navMesh->Draw(p_dx_Device);
-
-        //if (_selectItem->GetState() >= 4)
-        //{
-        //    _pSearchAlgorithm->Draw(p_dx_Device);
-        //}
-        break;
-    }
-
-    ImGui::Render();
-    ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
-
-    dx_device->EndScene();
-    dx_device->Present(NULL, NULL, NULL, NULL);
+void initialize() {
+    map = new Map();
+    nav_mesh = new NavMesh(/*floor->getListPoints()*/);
+    nav_mesh->update(dx_device);
+    map_builder = new MapBuilder();
+    map_builder->init_textures(dx_device);
+    game_state = 1;
 }
 
-void Update(LPDIRECT3DDEVICE9 dx_device)
+void update(LPDIRECT3DDEVICE9 dx_device)
 {
     ImGui_ImplDX9_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    static float f = 0.0f;
-    static int counter = 0;
-
     ImGui::Begin("Settings", nullptr, window_flags);
     ImGui::SetNextTreeNodeOpen(true);
-    if (ImGui::CollapsingHeader("Demo Maps"))
+    if (ImGui::CollapsingHeader("Maps"))
     {
         ImGui::PushID(1);
         ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.5f, 0.6f, 0.6f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.5f, 0.7f, 0.7f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.5f, 0.8f, 0.8f));
-        if (ImGui::Button("1"))
-        {
-
-        }
+        if (ImGui::Button("Demo #1"))
+            selected_map = 0;
         ImGui::PopStyleColor(3);
         ImGui::PopID();
         ImGui::SameLine(); 
@@ -277,10 +248,8 @@ void Update(LPDIRECT3DDEVICE9 dx_device)
         ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.6f, 0.6f, 0.6f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.6f, 0.7f, 0.7f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.6f, 0.8f, 0.8f));
-        if (ImGui::Button("2"))
-        {
-
-        }
+        if (ImGui::Button("Demo #2"))
+            selected_map = 1;
         ImGui::PopStyleColor(3);
         ImGui::PopID();
         ImGui::SameLine();
@@ -288,15 +257,15 @@ void Update(LPDIRECT3DDEVICE9 dx_device)
         ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.9f, 0.6f, 0.6f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.9f, 0.7f, 0.7f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.9f, 0.8f, 0.8f));
-        if (ImGui::Button("3"))
-        {
-
-        }
+        if (ImGui::Button("Demo #3"))
+            selected_map = 2;
         ImGui::PopStyleColor(3);
         ImGui::PopID();
         if (ImGui::Button("New Map"))
         {
-
+            selected_map = -1;
+            game_state = 1;
+            map_builder->set_reset(false);
         }
     }
     ImGui::SetNextTreeNodeOpen(true);
@@ -311,10 +280,21 @@ void Update(LPDIRECT3DDEVICE9 dx_device)
     if (ImGui::CollapsingHeader("Obstacles"))
     {
         ImGui::PushID(1);
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.65f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.65f, 0.7f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.65f, 0.8f, 0.8f));
+        if (ImGui::Button("Tree1"))
+        {
+
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+        ImGui::SameLine(); 
+        ImGui::PushID(1);
         ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.7f, 0.6f, 0.6f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.7f, 0.7f, 0.7f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.7f, 0.8f, 0.8f));
-        if (ImGui::Button("Tree"))
+        if (ImGui::Button("Tree2"))
         {
 
         }
@@ -374,7 +354,6 @@ void Update(LPDIRECT3DDEVICE9 dx_device)
     {
         ImGui::RadioButton("Djikstra", &selected_algo, 0);
         ImGui::RadioButton("A Star", &selected_algo, 1);
-
     }
     ImGui::SetNextTreeNodeOpen(true);
     if (ImGui::CollapsingHeader("Params"))
@@ -386,107 +365,102 @@ void Update(LPDIRECT3DDEVICE9 dx_device)
 
     switch (game_state)
     {
-    case 0:
-        //_floor = new CComposeFloor;
-        //_navMesh = new CNavmesh(_floor->getListPoints());
-        //_navMesh->Update(p_dx_Device);
-        //_selectItem = new CSelectItem();
-        //_selectItem->InitTexture(p_dx_Device);
-        nav_mesh = new NavMesh(/*floor->getListPoints()*/);
-        game_state = 1;
-        break;
     case 1:
-        //iSelectedMap = _selectItem->GetSelectedMap();
-        //if (iSelectedMap >= 0)
-        //{
-        //    _floor->SetDefaultMap(iSelectedMap);
-        //    _selectItem->SetObstacles(_floor->GetObstacles(iSelectedMap));
-        //    _selectItem->SetObstaclesTypes(_floor->GetObstaclesTypes(iSelectedMap));
-        //    _selectItem->SetStateInterfae(1);
-        //    iStateGame = 2;
-        //}
-        //else
-        //{
-        //    if (_floor->complete())
-        //    {
-        //        _selectItem->SetStateInterfae(1);
-        //        iStateGame = 2;
-        //    }
-            /*_navMesh = new CNavmesh(_floor->getListPoints());
-            _navMesh->Update(p_dx_Device);
-            switch (_selectItem->GetSelectedAlgorithm())
-            {
-            case 0:
-                _pSearchAlgorithm = new CSearchBreadFirst();
-                break;
-            case 1:
-                _pSearchAlgorithm = new CSearchDeepFirst();
-                break;
-            case 2:
-                _pSearchAlgorithm = new CSearchBidirectional();
-                break;
-            case 3:
-                _pSearchAlgorithm = new CSearchAStar();
-                break;
-            case 4:
-                _pSearchAlgorithm = new CSearchGreedy();
-                break;
-            }
-            _pSearchAlgorithm->SetMesh(_navMesh->GetMesh());
-            _pSearchAlgorithm->SetPosInit(_selectItem->GetStartPoint());
-            _pSearchAlgorithm->SetEndPoint(_selectItem->GetEndPoint());
-            _pSearchAlgorithm->GetPath();
-            _pSearchAlgorithm->Update(p_dx_Device);
-            if (_selectItem->GetReset())
-            {
-                iStateGame = 0;
-                _selectItem->SetReset(false);
-            }
-        }*/
-        break;
-    case 2:
-        /*iSelectedMap = _selectItem->GetSelectedMap();
-        if (iSelectedMap >= 0)
+        if (selected_map >= 0)
         {
-            _floor->SetDefaultMap(iSelectedMap);
-            _selectItem->SetObstacles(_floor->GetObstacles(iSelectedMap));
-            _selectItem->SetObstaclesTypes(_floor->GetObstaclesTypes(iSelectedMap));
-            _selectItem->SetStateInterfae(1);
+            map->set_demo_map(selected_map);
+            map_builder->set_obstacles(map->get_obstacles(selected_map));
+            map_builder->set_obstacles_types(map->get_obstacles_types(selected_map));
+            map_builder->set_interface_state(1);
+            game_state = 2;
         }
         else
         {
-            _navMesh = new CNavmesh(_floor->getListPoints());
-            _navMesh->addObstacle(_selectItem->GetObstacles());
-            _navMesh->Update(p_dx_Device);
-            if (_selectItem->GetReset())
+            if (map->complete())
             {
-                iStateGame = 0;
-                _selectItem->SetReset(false);
+                map_builder->set_interface_state(1);
+                game_state = 2;
             }
-            switch (_selectItem->GetSelectedAlgorithm())
+            nav_mesh = new NavMesh(map->get_points_list());
+            nav_mesh->update(dx_device);
+            switch (selected_algo)
             {
             case 0:
-                _pSearchAlgorithm = new CSearchBreadFirst();
+                //_pSearchAlgorithm = new CSearchBreadFirst();
                 break;
             case 1:
-                _pSearchAlgorithm = new CSearchDeepFirst();
-                break;
-            case 2:
-                _pSearchAlgorithm = new CSearchBidirectional();
-                break;
-            case 3:
-                _pSearchAlgorithm = new CSearchAStar();
-                break;
-            case 4:
-                _pSearchAlgorithm = new CSearchGreedy();
+                //_pSearchAlgorithm = new CSearchDeepFirst();
                 break;
             }
-            _pSearchAlgorithm->SetMesh(_navMesh->GetMesh());
+            /*_pSearchAlgorithm->SetMesh(_navMesh->GetMesh());
             _pSearchAlgorithm->SetPosInit(_selectItem->GetStartPoint());
             _pSearchAlgorithm->SetEndPoint(_selectItem->GetEndPoint());
             _pSearchAlgorithm->GetPath();
-            _pSearchAlgorithm->Update(p_dx_Device);
-        }*/
+            _pSearchAlgorithm->Update(p_dx_Device);*/
+        }
+        break;
+    case 2:
+        if (selected_map >= 0)
+        {
+            map->set_demo_map(selected_map);
+            map_builder->set_obstacles(map->get_obstacles(selected_map));
+            map_builder->set_obstacles_types(map->get_obstacles_types(selected_map));
+            map_builder->set_interface_state(1);
+        }
+        else
+        {
+            nav_mesh = new NavMesh(map->get_points_list());
+            nav_mesh->add_obstacle(map_builder->get_obstacles());
+            nav_mesh->update(dx_device);
+            switch (selected_algo)
+            {
+            case 0:
+                //_pSearchAlgorithm = new CSearchBreadFirst();
+                break;
+            case 1:
+                //_pSearchAlgorithm = new CSearchDeepFirst();
+                break;
+            }
+            //_pSearchAlgorithm->SetMesh(_navMesh->GetMesh());
+            //_pSearchAlgorithm->SetPosInit(_selectItem->GetStartPoint());
+            //_pSearchAlgorithm->SetEndPoint(_selectItem->GetEndPoint());
+            //_pSearchAlgorithm->GetPath();
+            //_pSearchAlgorithm->Update(p_dx_Device);
+        }
         break;
     }
+}
+
+void draw_scene(LPDIRECT3DDEVICE9 dx_device)
+{
+    dx_device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+    dx_device->BeginScene();
+
+    switch (game_state)
+    {
+    case 1:
+        map_builder->draw(dx_device);
+        nav_mesh->draw(dx_device);
+        break;
+    case 2:
+        map_builder->draw(dx_device);
+        nav_mesh->draw(dx_device);
+        //_pSearchAlgorithm->Draw(p_dx_Device);
+        break;
+    case 3:
+        map_builder->draw(dx_device);
+        nav_mesh->draw(dx_device);
+
+        //if (_selectItem->GetState() >= 4)
+        //{
+        //    _pSearchAlgorithm->Draw(p_dx_Device);
+        //}
+        break;
+    }
+
+    ImGui::Render();
+    ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+
+    dx_device->EndScene();
+    dx_device->Present(NULL, NULL, NULL, NULL);
 }

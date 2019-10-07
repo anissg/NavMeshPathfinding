@@ -3,28 +3,28 @@
 class Point2
 {
 public:
-    int X;
-    int Y;
+    int x;
+    int y;
 
-    Point2() : X(0), Y(0)
+    Point2() : x(0), y(0)
     {
     }
 
-    Point2(int x, int y) : X(x), Y(y)
+    Point2(int x, int y) : x(x), y(y)
     {
     }
 
-    Point2(float x, float y) : X(x), Y(y)
+    Point2(float x, float y) : x(x), y(y)
     {
     }
 
     bool operator == (const Point2& p)
     {
-        return X == p.X && Y == p.Y;
+        return x == p.x && y == p.y;
     }
 
     bool operator != (const Point2& p)
     {
-        return X != p.X || Y != p.Y;
+        return x != p.x || y != p.y;
     }
 };

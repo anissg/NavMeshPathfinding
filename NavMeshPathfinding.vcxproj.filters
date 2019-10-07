@@ -49,6 +49,9 @@
     </ClCompile>
     <ClCompile Include="NavMesh.cpp" />
     <ClCompile Include="MapBuilder.cpp" />
+    <ClCompile Include="Sprite.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="poly2tri\sweep\advancing_front.h">
@@ -102,5 +105,14 @@
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="DxStructs.h" />
     <ClInclude Include="MapBuilder.h" />
+    <ClInclude Include="Sprite.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Utils.h" />
+    <ClInclude Include="Map.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\background.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

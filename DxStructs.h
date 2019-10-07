@@ -2,13 +2,12 @@
 
 #include "Point2.h"
 #include <d3dx9math.h>
+#include <vector>
 
-class CUSTOMVERTEX
-{
-public:
-    float x, y, z;
-    DWORD color;
-};
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 768
+
+typedef std::vector<Point2>	obstacle;
 
 struct SOMMETMESH
 {
@@ -21,6 +20,15 @@ struct SOMMETMESH
 };
 
 #define D3DFVF_SOMMETMESH (D3DFVF_XYZ|D3DFVF_NORMAL)
+
+struct CUSTOMVERTEX
+{
+    FLOAT x, y, z;
+    DWORD color;
+    FLOAT u, v;
+};
+
+#define CUSTOMFVF (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1)
 
 struct ITEM 
 { 
