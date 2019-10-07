@@ -47,6 +47,8 @@
     <ClCompile Include="imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="NavMesh.cpp" />
+    <ClCompile Include="MapBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="poly2tri\sweep\advancing_front.h">
@@ -94,5 +96,11 @@
     <ClInclude Include="imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
+    <ClInclude Include="NavMesh.h" />
+    <ClInclude Include="Point2.h" />
+    <ClInclude Include="Edge.h" />
+    <ClInclude Include="Triangle.h" />
+    <ClInclude Include="DxStructs.h" />
+    <ClInclude Include="MapBuilder.h" />
   </ItemGroup>
 </Project>

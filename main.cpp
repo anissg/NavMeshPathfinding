@@ -11,14 +11,22 @@
 #include "imgui\imgui_impl_dx9.h"
 #include "imgui\imgui_impl_win32.h"
 
+#include "NavMesh.h"
+
 #define MAX_LOADSTRING 100
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 768
 
 int game_state = 0;
 int app_running = 1;
+int selected_algo = 0;
+bool draw_navmesh = true;
+bool draw_visited_nodes = false;
+NavMesh* nav_mesh;
 
 HINSTANCE hInst;
+LPDIRECT3DDEVICE9 dx_device;
+ImGuiWindowFlags window_flags;
 
 HWND Window(LPCTSTR title, int x_pos, int y_pos, int width, int height);
 LPDIRECT3DDEVICE9 InitializeDevice(HWND hwnd);
@@ -34,18 +42,28 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     MSG msg_Message;
     HWND hwnd = Window(L"NavMeshPathfinding", 0, 0, SCREEN_WIDTH + 7, SCREEN_HEIGHT + 29); // the window offsets
     
-    LPDIRECT3DDEVICE9 dx_device = InitializeDevice(hwnd);
+    dx_device = InitializeDevice(hwnd);
     SetUpCamera(dx_device);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); 
-    (void)io;
+    io;
 
     ImGui::StyleColorsDark();
     
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX9_Init(dx_device);
+
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(250, 728), ImGuiCond_FirstUseEver);
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.FramePadding.x = 8.0f;
+    style.FramePadding.y = 5.0f;
+    style.ItemSpacing.y = 10.0f;
+
+    window_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
 
     while (app_running)
     {
@@ -178,7 +196,7 @@ LPDIRECT3DDEVICE9 InitializeDevice(HWND hwnd)
     return dx_device;
 }
 
-void SetUpCamera(LPDIRECT3DDEVICE9 p_dx_Device)
+void SetUpCamera(LPDIRECT3DDEVICE9 dx_device)
 {
     D3DXMATRIX ortho2d;
     D3DXMATRIX id;
@@ -186,13 +204,13 @@ void SetUpCamera(LPDIRECT3DDEVICE9 p_dx_Device)
     D3DXMatrixOrthoLH(&ortho2d, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 1.0f);
     D3DXMatrixIdentity(&id);
 
-    p_dx_Device->SetTransform(D3DTS_PROJECTION, &ortho2d);
-    p_dx_Device->SetTransform(D3DTS_WORLD, &id);
-    p_dx_Device->SetTransform(D3DTS_VIEW, &id);
+    dx_device->SetTransform(D3DTS_PROJECTION, &ortho2d);
+    dx_device->SetTransform(D3DTS_WORLD, &id);
+    dx_device->SetTransform(D3DTS_VIEW, &id);
 
     D3DXMATRIX pos;
     D3DXMatrixTranslation(&pos, -SCREEN_WIDTH / 2, -SCREEN_HEIGHT / 2, 0.0f);
-    p_dx_Device->SetTransform(D3DTS_WORLD, &pos);
+    dx_device->SetTransform(D3DTS_WORLD, &pos);
 }
 
 void DrawScene(LPDIRECT3DDEVICE9 dx_device)
@@ -240,24 +258,141 @@ void Update(LPDIRECT3DDEVICE9 dx_device)
     static float f = 0.0f;
     static int counter = 0;
 
-    ImGui::Begin("Hello, world!");
-    ImGui::Text("This is some useful text.");
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-    if (ImGui::Button("Button"))
-        counter++;
-    ImGui::SameLine();
-    ImGui::Text("counter = %d", counter);
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::Begin("Settings", nullptr, window_flags);
+    ImGui::SetNextTreeNodeOpen(true);
+    if (ImGui::CollapsingHeader("Demo Maps"))
+    {
+        ImGui::PushID(1);
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.5f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.5f, 0.7f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.5f, 0.8f, 0.8f));
+        if (ImGui::Button("1"))
+        {
+
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+        ImGui::SameLine(); 
+        ImGui::PushID(1);
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.6f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.6f, 0.7f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.6f, 0.8f, 0.8f));
+        if (ImGui::Button("2"))
+        {
+
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+        ImGui::SameLine();
+        ImGui::PushID(1);
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.9f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.9f, 0.7f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.9f, 0.8f, 0.8f));
+        if (ImGui::Button("3"))
+        {
+
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+        if (ImGui::Button("New Map"))
+        {
+
+        }
+    }
+    ImGui::SetNextTreeNodeOpen(true);
+    if (ImGui::CollapsingHeader("NavMesh"))
+    {
+        if (ImGui::Button("Edit Mesh"))
+        {
+
+        }
+    }
+    ImGui::SetNextTreeNodeOpen(true);
+    if (ImGui::CollapsingHeader("Obstacles"))
+    {
+        ImGui::PushID(1);
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.7f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.7f, 0.7f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.7f, 0.8f, 0.8f));
+        if (ImGui::Button("Tree"))
+        {
+
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+        ImGui::SameLine();
+        ImGui::PushID(1);
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.75f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.75f, 0.7f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.75f, 0.8f, 0.8f));
+        if (ImGui::Button("House1"))
+        {
+
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+        ImGui::SameLine();
+        ImGui::PushID(1);
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.8f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.8f, 0.7f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.8f, 0.8f, 0.8f));
+        if (ImGui::Button("House2"))
+        {
+
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+
+    }
+    ImGui::SetNextTreeNodeOpen(true);
+    if (ImGui::CollapsingHeader("Start / End positions"))
+    {
+        ImGui::PushID(1);
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.3f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.3f, 0.7f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.3f, 0.8f, 0.8f));
+        if (ImGui::Button("Start"))
+        {
+
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+        ImGui::SameLine();
+        ImGui::PushID(1);
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.0f, 0.7f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.0f, 0.8f, 0.8f));
+        if (ImGui::Button("End"))
+        {
+
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+    }
+    ImGui::SetNextTreeNodeOpen(true);
+    if (ImGui::CollapsingHeader("Algorithms"))
+    {
+        ImGui::RadioButton("Djikstra", &selected_algo, 0);
+        ImGui::RadioButton("A Star", &selected_algo, 1);
+
+    }
+    ImGui::SetNextTreeNodeOpen(true);
+    if (ImGui::CollapsingHeader("Params"))
+    {
+        ImGui::Checkbox("Draw NavMesh", &draw_navmesh);
+        ImGui::Checkbox("Draw Visited Nodes", &draw_visited_nodes);
+    }
     ImGui::End();
 
     switch (game_state)
     {
-    case 0://init floor
+    case 0:
         //_floor = new CComposeFloor;
         //_navMesh = new CNavmesh(_floor->getListPoints());
         //_navMesh->Update(p_dx_Device);
         //_selectItem = new CSelectItem();
         //_selectItem->InitTexture(p_dx_Device);
+        nav_mesh = new NavMesh(/*floor->getListPoints()*/);
         game_state = 1;
         break;
     case 1:
