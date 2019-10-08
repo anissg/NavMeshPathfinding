@@ -15,16 +15,22 @@
 #include "MapBuilder.h"
 #include "Map.h"
 #include "DxStructs.h"
+#include "SearchAlgo.h"
+#include "CSearchDjikstra.h"
+#include "CSearchAStar.h"
 
 int game_state = 0;
 int app_running = 1;
 int selected_map = -1;
+int selected_item = -1;
 int selected_algo = 0;
 bool draw_navmesh = true;
 bool draw_visited_nodes = false;
+bool edit_mode = true;
 NavMesh* nav_mesh;
 MapBuilder* map_builder;
 Map* map;
+SearchAlgo* search_algo;
 
 HINSTANCE hInst;
 LPDIRECT3DDEVICE9 dx_device;
@@ -271,9 +277,27 @@ void update(LPDIRECT3DDEVICE9 dx_device)
     ImGui::SetNextTreeNodeOpen(true);
     if (ImGui::CollapsingHeader("NavMesh"))
     {
-        if (ImGui::Button("Edit Mesh"))
+        if (edit_mode)
         {
-
+            ImGui::PushID(1);
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.44f, 0.6f, 0.6f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.44f, 0.7f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.44f, 0.8f, 0.8f));
+            if (ImGui::Button("End Mesh Edit"))
+                edit_mode = false;
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+        }
+        else
+        {
+            ImGui::PushID(1);
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.3f, 0.6f, 0.6f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.3f, 0.7f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.3f, 0.8f, 0.8f));
+            if (ImGui::Button("Start Mesh Edit"))
+                edit_mode = true;
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
         }
     }
     ImGui::SetNextTreeNodeOpen(true);
@@ -285,7 +309,7 @@ void update(LPDIRECT3DDEVICE9 dx_device)
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.65f, 0.8f, 0.8f));
         if (ImGui::Button("Tree1"))
         {
-
+            selected_item = 0;
         }
         ImGui::PopStyleColor(3);
         ImGui::PopID();
@@ -296,7 +320,7 @@ void update(LPDIRECT3DDEVICE9 dx_device)
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.7f, 0.8f, 0.8f));
         if (ImGui::Button("Tree2"))
         {
-
+            selected_item = 1;
         }
         ImGui::PopStyleColor(3);
         ImGui::PopID();
@@ -307,7 +331,7 @@ void update(LPDIRECT3DDEVICE9 dx_device)
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.75f, 0.8f, 0.8f));
         if (ImGui::Button("House1"))
         {
-
+            selected_item = 2;
         }
         ImGui::PopStyleColor(3);
         ImGui::PopID();
@@ -318,7 +342,7 @@ void update(LPDIRECT3DDEVICE9 dx_device)
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.8f, 0.8f, 0.8f));
         if (ImGui::Button("House2"))
         {
-
+            selected_item = 3;
         }
         ImGui::PopStyleColor(3);
         ImGui::PopID();
@@ -359,9 +383,11 @@ void update(LPDIRECT3DDEVICE9 dx_device)
     if (ImGui::CollapsingHeader("Params"))
     {
         ImGui::Checkbox("Draw NavMesh", &draw_navmesh);
-        ImGui::Checkbox("Draw Visited Nodes", &draw_visited_nodes);
+        //ImGui::Checkbox("Draw Visited Nodes", &draw_visited_nodes);
     }
     ImGui::End();
+
+
 
     switch (game_state)
     {
@@ -373,10 +399,12 @@ void update(LPDIRECT3DDEVICE9 dx_device)
             map_builder->set_obstacles_types(map->get_obstacles_types(selected_map));
             map_builder->set_interface_state(1);
             game_state = 2;
+            selected_map = -1;
         }
         else
         {
-            if (map->complete())
+            map->set_complete(!edit_mode);
+            if (!edit_mode)
             {
                 map_builder->set_interface_state(1);
                 game_state = 2;
@@ -386,17 +414,17 @@ void update(LPDIRECT3DDEVICE9 dx_device)
             switch (selected_algo)
             {
             case 0:
-                //_pSearchAlgorithm = new CSearchBreadFirst();
+                search_algo = new CSearchDjikstra();
                 break;
             case 1:
-                //_pSearchAlgorithm = new CSearchDeepFirst();
+                search_algo = new CSearchAStar();
                 break;
             }
-            /*_pSearchAlgorithm->SetMesh(_navMesh->GetMesh());
-            _pSearchAlgorithm->SetPosInit(_selectItem->GetStartPoint());
-            _pSearchAlgorithm->SetEndPoint(_selectItem->GetEndPoint());
-            _pSearchAlgorithm->GetPath();
-            _pSearchAlgorithm->Update(p_dx_Device);*/
+            search_algo->SetMesh(nav_mesh->get_mesh());
+            search_algo->SetPosInit(map_builder->get_start_point());
+            search_algo->SetEndPoint(map_builder->get_end_point());
+            search_algo->GetPath();
+            search_algo->Update(dx_device);
         }
         break;
     case 2:
@@ -406,26 +434,32 @@ void update(LPDIRECT3DDEVICE9 dx_device)
             map_builder->set_obstacles(map->get_obstacles(selected_map));
             map_builder->set_obstacles_types(map->get_obstacles_types(selected_map));
             map_builder->set_interface_state(1);
+            selected_map = -1;
         }
         else
         {
+            if (edit_mode)
+            {
+                game_state = 1;
+            }
+            map_builder->set_selected_item(selected_item);
             nav_mesh = new NavMesh(map->get_points_list());
             nav_mesh->add_obstacle(map_builder->get_obstacles());
             nav_mesh->update(dx_device);
             switch (selected_algo)
             {
             case 0:
-                //_pSearchAlgorithm = new CSearchBreadFirst();
+                search_algo = new CSearchDjikstra();
                 break;
             case 1:
-                //_pSearchAlgorithm = new CSearchDeepFirst();
+                search_algo = new CSearchAStar();
                 break;
             }
-            //_pSearchAlgorithm->SetMesh(_navMesh->GetMesh());
-            //_pSearchAlgorithm->SetPosInit(_selectItem->GetStartPoint());
-            //_pSearchAlgorithm->SetEndPoint(_selectItem->GetEndPoint());
-            //_pSearchAlgorithm->GetPath();
-            //_pSearchAlgorithm->Update(p_dx_Device);
+            search_algo->SetMesh(nav_mesh->get_mesh());
+            search_algo->SetPosInit(map_builder->get_start_point());
+            search_algo->SetEndPoint(map_builder->get_end_point());
+            search_algo->GetPath();
+            search_algo->Update(dx_device);
         }
         break;
     }
@@ -445,16 +479,16 @@ void draw_scene(LPDIRECT3DDEVICE9 dx_device)
     case 2:
         map_builder->draw(dx_device);
         nav_mesh->draw(dx_device);
-        //_pSearchAlgorithm->Draw(p_dx_Device);
+        search_algo->Draw(dx_device);
         break;
     case 3:
         map_builder->draw(dx_device);
         nav_mesh->draw(dx_device);
 
-        //if (_selectItem->GetState() >= 4)
-        //{
-        //    _pSearchAlgorithm->Draw(p_dx_Device);
-        //}
+        if (map_builder->get_state() >= 4)
+        {
+            search_algo->Draw(dx_device);
+        }
         break;
     }
 

@@ -7,7 +7,7 @@ square_vertices(), material(), color(), nb_triangles(0), nb_points(0)
 {
 }
 
-NavMesh::NavMesh(std::vector<Point2> point_list) : CTD(), obstacles(obstacles), points_list(), points_list_2(),
+NavMesh::NavMesh(std::vector<Point2> points_list) : CTD(), obstacles(obstacles), points_list(), points_list_2(),
 triangles_list(), triangles_list_2(), edges_list(), vertex_buffer(), vertex_buffer_triangles(),
 square_vertices(), material(), nb_triangles(0)
 {
@@ -50,11 +50,11 @@ square_vertices(), material(), nb_triangles(0)
     color = 0xff000000;
 
     square_vertices[0].x = 0.0f;
-    square_vertices[0].y = 15.0f;
+    square_vertices[0].y = 5.0f;
     square_vertices[0].z = 0.0f;
     square_vertices[0].color = color;
 
-    square_vertices[1].x = 15.0f;
+    square_vertices[1].x = 5.0f;
     square_vertices[1].y = 0.0f;
     square_vertices[1].z = 0.0f;
     square_vertices[1].color = color;
@@ -64,18 +64,18 @@ square_vertices(), material(), nb_triangles(0)
     square_vertices[2].z = 0.0f;
     square_vertices[2].color = color;
 
-    square_vertices[3].x = 15.0f;
-    square_vertices[3].y = 15.0f;
+    square_vertices[3].x = 5.0f;
+    square_vertices[3].y = 5.0f;
     square_vertices[3].z = 0.0f;
     square_vertices[3].color = color;
 
-    square_vertices[4].x = 15.0f;
+    square_vertices[4].x = 5.0f;
     square_vertices[4].y = 0.0f;
     square_vertices[4].z = 0.0f;
     square_vertices[4].color = color;
 
     square_vertices[5].x = 0.0f;
-    square_vertices[5].y = 15.0f;
+    square_vertices[5].y = 5.0f;
     square_vertices[5].z = 0.0f;
     square_vertices[5].color = color;
 }

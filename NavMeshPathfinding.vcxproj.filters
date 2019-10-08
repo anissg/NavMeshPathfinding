@@ -11,6 +11,9 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{381225bf-97c2-4bf7-bf05-fbbeb054f540}</UniqueIdentifier>
     </Filter>
+    <Filter Include="algorithms">
+      <UniqueIdentifier>{6360924f-7b2c-4b0e-9ea8-37f11b60e8d0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -52,6 +55,15 @@
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="SearchAlgo.cpp">
+      <Filter>algorithms</Filter>
+    </ClCompile>
+    <ClCompile Include="CSearchAStar.cpp">
+      <Filter>algorithms</Filter>
+    </ClCompile>
+    <ClCompile Include="CSearchDjikstra.cpp">
+      <Filter>algorithms</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="poly2tri\sweep\advancing_front.h">
@@ -109,9 +121,36 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="SearchAlgo.h">
+      <Filter>algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="CSearchAStar.h">
+      <Filter>algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="CSearchDjikstra.h">
+      <Filter>algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\background.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\house1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\house2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\player.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\potion.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\tree1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\tree2.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

@@ -28,7 +28,7 @@ class NavMesh
 
 public:
     NavMesh();
-    NavMesh(std::vector<Point2> point_list);
+    NavMesh(std::vector<Point2> points_list);
     ~NavMesh();
     void set_points(std::vector<Point2> points);
     void add_obstacle(std::vector<obstacle> obstacles);

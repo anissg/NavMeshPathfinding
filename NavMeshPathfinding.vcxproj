@@ -139,6 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CSearchAStar.cpp" />
+    <ClCompile Include="CSearchDjikstra.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
@@ -154,10 +156,13 @@
     <ClCompile Include="poly2tri\sweep\cdt.cc" />
     <ClCompile Include="poly2tri\sweep\sweep.cc" />
     <ClCompile Include="poly2tri\sweep\sweep_context.cc" />
+    <ClCompile Include="SearchAlgo.cpp" />
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CSearchAStar.h" />
+    <ClInclude Include="CSearchDjikstra.h" />
     <ClInclude Include="DxStructs.h" />
     <ClInclude Include="Edge.h" />
     <ClInclude Include="imgui\imconfig.h" />
@@ -179,6 +184,7 @@
     <ClInclude Include="poly2tri\sweep\cdt.h" />
     <ClInclude Include="poly2tri\sweep\sweep.h" />
     <ClInclude Include="poly2tri\sweep\sweep_context.h" />
+    <ClInclude Include="SearchAlgo.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Triangle.h" />
@@ -186,6 +192,12 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\background.png" />
+    <Image Include="Resources\house1.png" />
+    <Image Include="Resources\house2.png" />
+    <Image Include="Resources\player.png" />
+    <Image Include="Resources\potion.png" />
+    <Image Include="Resources\tree1.png" />
+    <Image Include="Resources\tree2.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

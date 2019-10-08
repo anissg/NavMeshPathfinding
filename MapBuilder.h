@@ -24,7 +24,7 @@ class MapBuilder
     p2t::Point*             end_point;
 
     int					    mouse_state;
-    int					    selected_items;
+    int					    selected_item;
     bool				    visible;
     bool				    reset;
     int					    interface_state;
@@ -37,14 +37,13 @@ public:
     void draw(LPDIRECT3DDEVICE9 dx_device);
 
     void WindowProcedure(UINT uint_Message, WPARAM wParam, LPARAM lParam);
-    void MouseEventNavMesh(UINT uint_Message, WPARAM wParam, LPARAM lParam);
-    void MouseEventPutItems(UINT uint_Message, WPARAM wParam, LPARAM lParam);
     void MouseEventPutStartPoint(UINT uint_Message, WPARAM wParam, LPARAM lParam);
     void MouseEventPutEndPoint(UINT uint_Message, WPARAM wParam, LPARAM lParam);
 
     std::vector<obstacle> get_obstacles();
     void set_obstacles(std::vector<obstacle> obstacles);
     void set_obstacles_types(std::vector<ITEM> elements);
+    void set_selected_item(int item);
     void set_interface_state(int state);
     void set_reset(bool reset);
     bool get_reset();

@@ -17,9 +17,9 @@ void Map::WindowProcedure(UINT msg, WPARAM wParam, LPARAM lParam)
         current_point.x = GET_X_LPARAM(lParam);
         current_point.y = SCREEN_HEIGHT - GET_Y_LPARAM(lParam);
 
-        if (current_point.x < 0 || current_point.y < 0 || current_point.y > SCREEN_HEIGHT)
+        if (current_point.x < 250 || current_point.y < 0 || current_point.y > SCREEN_HEIGHT)
         {
-            if (current_point.x < 0) current_point.x = 0;
+            if (current_point.x < 250) current_point.x = 250;
             if (current_point.y < 0)  current_point.y = 0;
             if (points_list.size() > 0)
             {
@@ -78,9 +78,7 @@ void Map::WindowProcedure(UINT msg, WPARAM wParam, LPARAM lParam)
                     float fd = distance(p, p2);
                     if (fd < 20)
                     {
-                        complete_path = true;
-                        points_list.pop_back();
-                        break;
+                        return;
                     }
                 }
                 if (!complete_path)
@@ -100,9 +98,16 @@ float Map::distance(Point2 p1, Point2 p2)
     return sqrtf(powf((float)p2.x - (float)p1.x, 2) + powf((float)p2.y - (float)p1.y, 2));
 }
 
-bool Map::complete() const
+bool Map::complete()
 {
     return complete_path;
+}
+
+void Map::set_complete(bool complete)
+{
+    complete_path = complete;
+    if (complete)
+        points_list.pop_back();
 }
 
 std::vector<Point2> Map::get_points_list()
@@ -124,51 +129,51 @@ std::vector<obstacle> Map::get_obstacles(int demo_map)
     {
     case 0:
         obst.push_back(Point2(change_x(581), change_y(709)));
-        obst.push_back(Point2(change_x(741), change_y(709)));
-        obst.push_back(Point2(change_x(741), change_y(793)));
-        obst.push_back(Point2(change_x(581), change_y(793)));
+        obst.push_back(Point2(change_x(581 + 140), change_y(709)));
+        obst.push_back(Point2(change_x(581 + 140), change_y(709 + 88)));
+        obst.push_back(Point2(change_x(581), change_y(709 + 88)));
         obstacles.push_back(obst);
         obst.clear();
         obst.push_back(Point2(change_x(711), change_y(531)));
-        obst.push_back(Point2(change_x(871), change_y(531)));
-        obst.push_back(Point2(change_x(871), change_y(615)));
-        obst.push_back(Point2(change_x(711), change_y(615)));
+        obst.push_back(Point2(change_x(711 + 140), change_y(531)));
+        obst.push_back(Point2(change_x(711 + 140), change_y(531 + 88)));
+        obst.push_back(Point2(change_x(711), change_y(531 + 88)));
         obstacles.push_back(obst);
         obst.clear();
         obst.push_back(Point2(change_x(572), change_y(312)));
-        obst.push_back(Point2(change_x(732), change_y(312)));
-        obst.push_back(Point2(change_x(732), change_y(396)));
-        obst.push_back(Point2(change_x(572), change_y(396)));
+        obst.push_back(Point2(change_x(572 + 140), change_y(312)));
+        obst.push_back(Point2(change_x(572 + 140), change_y(312 + 88)));
+        obst.push_back(Point2(change_x(572), change_y(312 + 88)));
         obstacles.push_back(obst);
         obst.clear();
         obst.push_back(Point2(change_x(954), change_y(658)));
-        obst.push_back(Point2(change_x(1082), change_y(658)));
-        obst.push_back(Point2(change_x(1082), change_y(758)));
-        obst.push_back(Point2(change_x(954), change_y(758)));
+        obst.push_back(Point2(change_x(954 + 70), change_y(658)));
+        obst.push_back(Point2(change_x(954 + 70), change_y(658 + 88)));
+        obst.push_back(Point2(change_x(954), change_y(658 + 88)));
         obstacles.push_back(obst);
         obst.clear();
         obst.push_back(Point2(change_x(483), change_y(845)));
-        obst.push_back(Point2(change_x(547), change_y(845)));
-        obst.push_back(Point2(change_x(547), change_y(925)));
-        obst.push_back(Point2(change_x(483), change_y(925)));
+        obst.push_back(Point2(change_x(483 + 64), change_y(845)));
+        obst.push_back(Point2(change_x(483 + 64), change_y(845 + 64)));
+        obst.push_back(Point2(change_x(483), change_y(845 + 64)));
         obstacles.push_back(obst);
         obst.clear();
         obst.push_back(Point2(change_x(1284), change_y(338)));
-        obst.push_back(Point2(change_x(1444), change_y(338)));
-        obst.push_back(Point2(change_x(1444), change_y(422)));
-        obst.push_back(Point2(change_x(1284), change_y(422)));
+        obst.push_back(Point2(change_x(1284 + 140), change_y(338)));
+        obst.push_back(Point2(change_x(1284 + 140), change_y(338 + 88)));
+        obst.push_back(Point2(change_x(1284), change_y(338 + 88)));
         obstacles.push_back(obst);
         obst.clear();
         obst.push_back(Point2(change_x(1244), change_y(827)));
-        obst.push_back(Point2(change_x(1308), change_y(827)));
-        obst.push_back(Point2(change_x(1308), change_y(907)));
-        obst.push_back(Point2(change_x(1244), change_y(907)));
+        obst.push_back(Point2(change_x(1244 + 32), change_y(827)));
+        obst.push_back(Point2(change_x(1244 + 32), change_y(827 + 32)));
+        obst.push_back(Point2(change_x(1244), change_y(827 + 32)));
         obstacles.push_back(obst);
         obst.clear();
         obst.push_back(Point2(change_x(533), change_y(157)));
-        obst.push_back(Point2(change_x(597), change_y(157)));
-        obst.push_back(Point2(change_x(597), change_y(237)));
-        obst.push_back(Point2(change_x(533), change_y(237)));
+        obst.push_back(Point2(change_x(533 + 64), change_y(157)));
+        obst.push_back(Point2(change_x(533 + 64), change_y(157 + 64)));
+        obst.push_back(Point2(change_x(533), change_y(157 + 64)));
         obstacles.push_back(obst);
         obst.clear();
         break;
